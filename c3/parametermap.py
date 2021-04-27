@@ -264,7 +264,9 @@ class ParameterMap:
         # TODO is there a reason to not return a tensorflow array
         return np.concatenate(values, axis=0).flatten()
 
-    def set_parameters_scaled(self, values: Union[tf.constant, tf.Variable], opt_map=None) -> None:
+    def set_parameters_scaled(
+        self, values: Union[tf.constant, tf.Variable], opt_map=None
+    ) -> None:
         """
         Set the values in the original instruction class. This fuction should only be
         called by an optimizer. Are you an optimizer?

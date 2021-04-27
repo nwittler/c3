@@ -10,6 +10,7 @@ from c3.optimizers.optimizer import Optimizer
 from c3.utils.utils import log_setup
 from c3.parametermap import ParameterMap
 
+
 class ExperimentDesign(Optimizer):
     """
     Derive the optimal control parameters to improve knowledge of a model parameter.
@@ -38,18 +39,18 @@ class ExperimentDesign(Optimizer):
     """
 
     def __init__(
-            self,
-            dir_path,
-            pmap: ParameterMap,
-            model_params,
-            algorithm=None,
-            store_unitaries=False,
-            options={},
-            run_name=None,
-            interactive=True,
-            gateset_opt_map=None,
-            opt_gates=None,
-            num_control_sets=1
+        self,
+        dir_path,
+        pmap: ParameterMap,
+        model_params,
+        algorithm=None,
+        store_unitaries=False,
+        options={},
+        run_name=None,
+        interactive=True,
+        gateset_opt_map=None,
+        opt_gates=None,
+        num_control_sets=1,
     ) -> None:
         super().__init__(
             pmap=pmap,
@@ -151,11 +152,15 @@ class ExperimentDesign(Optimizer):
                     model_par_value = tf.constant(model_par)
                     t2.watch(model_par_value)
                     t1.watch(model_par_value)
-                    self.pmap.set_parameters_scaled([model_par_value], self.model_param_map)
+                    self.pmap.set_parameters_scaled(
+                        [model_par_value], self.model_param_map
+                    )
                     print("Calculating propagator...")
                     propagators = self.exp.compute_propagators()
                     propagator = propagators[self.opt_gates[0]]
-                    measurement = tf.abs(tf.linalg.adjoint(ground_state) @ propagator @ ground_state)
+                    measurement = tf.abs(
+                        tf.linalg.adjoint(ground_state) @ propagator @ ground_state
+                    )
                     print(f"Measured {measurement}")
                 print("Calculating first order gradient...")
                 d_measurement = t2.gradient(measurement, model_par_value)

@@ -10,6 +10,7 @@ from c3.libraries.algorithms import algorithms
 from c3.experiment import Experiment
 from c3.parametermap import ParameterMap
 
+
 class Optimizer:
     """
     General optimizer class from which specific classes are inherited.
