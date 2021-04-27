@@ -12,6 +12,7 @@ from c3.parametermap import ParameterMap
 from c3.experiment import Experiment
 from c3.system.model import Model
 from c3.generator.generator import Generator
+from c3.optimizers.experimentdesign import ExperimentDesign
 
 logging.getLogger("tensorflow").disabled = True
 
@@ -33,7 +34,7 @@ if __name__ == "__main__":
         except hjson.decoder.HjsonDecodeError:
             raise Exception(f"Config {opt_config} is invalid.")
 
-    optim_type = cfg["optim_type"]
+    optim_type = cfg.pop("optim_type")
 
     tf_utils.tf_setup()
     with tf.device("/CPU:0"):
@@ -41,17 +42,17 @@ if __name__ == "__main__":
         gen = None
         if "model" in cfg:
             model = Model()
-            model.read_config(cfg["model"])
+            model.read_config(cfg.pop("model"))
         if "generator" in cfg:
             gen = Generator()
-            gen.read_config(cfg["generator"])
+            gen.read_config(cfg.pop("generator"))
         if "instructions" in cfg:
             pmap = ParameterMap(model=model, generator=gen)
-            pmap.read_config(cfg["instructions"])
+            pmap.read_config(cfg.pop("instructions"))
             exp = Experiment(pmap)
         if "exp_cfg" in cfg:
             exp = Experiment()
-            exp.read_config(cfg["exp_cfg"])
+            exp.read_config(cfg.pop("exp_cfg"))
         else:
             print("C3:STATUS: No instructions specified. Performing quick setup.")
             exp = Experiment()
@@ -62,7 +63,7 @@ if __name__ == "__main__":
             if cfg.pop("include_model", False):
                 opt.include_model()
         elif optim_type == "C2":
-            eval_func = cfg["eval_func"]
+            eval_func = cfg.pop("eval_func")
             opt = parsers.create_c2_opt(opt_config, eval_func)
         elif optim_type == "C3" or optim_type == "C3_confirm":
             print("C3:STATUS: creating c3 opt ...")
@@ -74,6 +75,8 @@ if __name__ == "__main__":
             print("C3:STATUS: creating c3 opt ...")
             opt = parsers.create_c3_opt(opt_config)
             opt.inverse = True
+        elif optim_type == "ExperimentDesign":
+            opt = ExperimentDesign(pmap=exp.pmap, **cfg)
         else:
             raise Exception("C3:ERROR:Unknown optimization type specified.")
         opt.set_exp(exp)
@@ -141,3 +144,6 @@ if __name__ == "__main__":
 
             print("sensitivity test ...")
             opt.sensitivity()
+
+        elif optim_type == "ExperimentDesign":
+            opt.optimize_controls()

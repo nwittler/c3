@@ -52,14 +52,14 @@ def create_c1_opt(optimizer_config, exp):
             try:
                 cb_fid_func = fidelities[cb_fid]
             except KeyError:
-                raise Exception(f"C3:ERROR:Unkown goal function: {cb_fid}")
+                raise Exception(f"C3:ERROR:Unknown goal function: {cb_fid}")
             print(f"C3:STATUS:Found {cb_fid} in libraries.")
             callback_fids.append(cb_fid_func)
 
     try:
         fid_func = fidelities[fid]
     except KeyError:
-        raise Exception(f"C3:ERROR:Unkown goal function: {fid} ")
+        raise Exception(f"C3:ERROR:Unknown goal function: {fid} ")
     print(f"C3:STATUS:Found {fid} in libraries.")
 
     exp.set_opt_gates(cfg["opt_gates"])

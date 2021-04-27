@@ -6,9 +6,9 @@ from typing import Callable, Union
 import numpy as np
 import tensorflow as tf
 import json
-import c3.libraries.algorithms as algorithms
+from c3.libraries.algorithms import algorithms
 from c3.experiment import Experiment
-
+from c3.parametermap import ParameterMap
 
 class Optimizer:
     """
@@ -24,7 +24,7 @@ class Optimizer:
 
     def __init__(
         self,
-        pmap,
+        pmap: ParameterMap,
         algorithm=None,
         store_unitaries=False,
     ):
@@ -40,7 +40,10 @@ class Optimizer:
         self.options = None
         self.__dir_path = None
         self.logdir = None
-        self.set_algorithm(algorithm)
+        if type(algorithm) is str:
+            self.set_algorithm(algorithms[algorithm])
+        else:
+            self.set_algorithm(algorithm)
 
     def set_algorithm(self, algorithm: Callable) -> None:
         if algorithm:

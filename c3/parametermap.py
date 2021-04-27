@@ -239,7 +239,7 @@ class ParameterMap:
         if model_updated and self.model:
             self.model.update_model()
 
-    def get_parameters_scaled(self) -> np.ndarray:
+    def get_parameters_scaled(self, opt_map=None) -> np.ndarray:
         """
         Return the current parameters. This fuction should only be called by an
         optimizer. Are you an optimizer?
@@ -254,6 +254,8 @@ class ParameterMap:
         list of Quantity
 
         """
+        if opt_map is None:
+            opt_map = self.opt_map
         values = []
         for equiv_ids in self.opt_map:
             key = "-".join(equiv_ids[0])
@@ -262,7 +264,7 @@ class ParameterMap:
         # TODO is there a reason to not return a tensorflow array
         return np.concatenate(values, axis=0).flatten()
 
-    def set_parameters_scaled(self, values: Union[tf.constant, tf.Variable]) -> None:
+    def set_parameters_scaled(self, values: Union[tf.constant, tf.Variable], opt_map=None) -> None:
         """
         Set the values in the original instruction class. This fuction should only be
         called by an optimizer. Are you an optimizer?
@@ -275,7 +277,9 @@ class ParameterMap:
         """
         model_updated = False
         val_indx = 0
-        for equiv_ids in self.opt_map:
+        if opt_map is None:
+            opt_map = self.opt_map
+        for equiv_ids in opt_map:
             key = "-".join(equiv_ids[0])
             par_len = self.__pars[key].length
             for par_id in equiv_ids:
