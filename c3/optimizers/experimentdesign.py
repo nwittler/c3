@@ -46,7 +46,7 @@ class ExperimentDesign(Optimizer):
         algorithm=None,
         store_unitaries=False,
         options={},
-        run_name=None,
+        run_name="",
         interactive=True,
         gateset_opt_map=None,
         opt_gates=None,
@@ -143,15 +143,15 @@ class ExperimentDesign(Optimizer):
         # Current params is a flatten vector multiple control parameter sets,
         # so we reshape and iterate.
         # TODO: Vectorize loop
+        model_par = self.pmap.get_parameters_scaled(self.model_param_map)[0]
+        model_par_value = tf.constant(model_par)
         for controls in tf.reshape(current_params, (-1, self.control_dim)):
             with tf.GradientTape() as t1:
+                t1.watch(model_par_value)
                 with tf.GradientTape() as t2:
                     self.pmap.set_parameters_scaled(controls)
                     # Here we need to have another loop that samples over a model parameter distribution
-                    model_par = self.pmap.get_parameters_scaled(self.model_param_map)[0]
-                    model_par_value = tf.constant(model_par)
                     t2.watch(model_par_value)
-                    t1.watch(model_par_value)
                     self.pmap.set_parameters_scaled(
                         [model_par_value], self.model_param_map
                     )
@@ -172,7 +172,7 @@ class ExperimentDesign(Optimizer):
 
         with open(self.logdir + self.logname, "a") as logfile:
             logfile.write(f"\nEvaluation {self.evaluation + 1} returned:\n")
-            logfile.write(f"goal: {self.fid_func.__name__}: {float(goal)}\n")
+            logfile.write(f"goal: Fisher: {float(goal)}\n")
             logfile.flush()
 
         self.optim_status["params"] = [

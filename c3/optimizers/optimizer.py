@@ -2,7 +2,7 @@
 
 import os
 import time
-from typing import Callable, Union
+from typing import Any, Callable, Dict, Union
 import numpy as np
 import tensorflow as tf
 import json
@@ -30,17 +30,17 @@ class Optimizer:
         store_unitaries=False,
     ):
         self.pmap = pmap
-        self.optim_status = {}
-        self.gradients = {}
+        self.optim_status: Dict[str, Any] = {}
+        self.gradients: Dict[str, Any] = {}
         self.current_best_goal = 9876543210.123456789
         self.current_best_params = None
         self.evaluation = 0
         self.store_unitaries = store_unitaries
         self.created_by = None
-        self.logname = None
+        self.logname = ""
         self.options = None
         self.__dir_path = None
-        self.logdir = None
+        self.logdir = ""
         if type(algorithm) is str:
             self.set_algorithm(algorithms[algorithm])
         else:
@@ -51,7 +51,7 @@ class Optimizer:
             self.algorithm = algorithm
         else:
             print("C3:WARNING:No algorithm passed. Using default LBFGS")
-            self.algorithm = algorithms.lbfgs
+            self.algorithm = algorithms["lbfgs"]
 
     def replace_logdir(self, new_logdir):
         """
