@@ -114,7 +114,7 @@ def tf_measure_operator(M, rho):
     return tf.linalg.trace(tf.matmul(M, rho))
 
 
-@tf.function
+# @tf.function
 def tf_dU_of_t(h0, hks, cflds_t, dt):
     """
     Compute H(t) = H_0 + sum_k c_k H_k and matrix exponential exp(i H(t) dt).
@@ -193,7 +193,7 @@ def tf_dU_of_t_lind(h0, hks, col_ops, cflds_t, dt):
     return dU
 
 
-@tf.function
+# @tf.function
 def tf_propagation_vectorized(h0, hks, cflds_t, dt):
     dt = tf.cast(dt, dtype=tf.complex128)
     cflds_t = tf.cast(cflds_t, dtype=tf.complex128)
