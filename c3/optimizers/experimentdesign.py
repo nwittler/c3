@@ -152,33 +152,48 @@ class ExperimentDesign(Optimizer):
         # so we reshape and iterate.
         # TODO: Vectorize loop
         model_par = self.pmap.get_parameters_scaled(self.model_param_map)[0]
-        model_par_value = tf.constant(model_par)
-        params = []
-        for controls in tf.reshape(current_params, (-1, self.control_dim)):
-            with tf.GradientTape() as t1:
-                t1.watch(model_par_value)
-                with tf.GradientTape() as t2:
-                    self.pmap.set_parameters_scaled(controls)
-                    # Here we need to have another loop that samples over a model parameter distribution
-                    t2.watch(model_par_value)
-                    self.pmap.set_parameters_scaled(
-                        [model_par_value], self.model_param_map
-                    )
-                    propagators = self.exp.compute_propagators()
-                    propagator = propagators[self.opt_gates[0]]
-                    measurement = (
-                        tf.abs(
-                            tf.linalg.adjoint(ground_state) @ propagator @ ground_state
-                        )
-                        ** 2
-                    )
-                    meas_log = tf.math.log(measurement)
-                d_measurement = t2.gradient(meas_log, model_par_value)
-            d2_measurement = t1.gradient(d_measurement, model_par_value)
-            fisher_info -= measurement * d2_measurement
-            params.extend([par.numpy().tolist() for par in self.pmap.get_parameters()])
 
-        goal = 1 / fisher_info
+        model_par_samples = np.stack(
+            [
+                (1 + 0.1 * rand) * model_par
+                for rand in np.random.randn(self.num_control_sets)
+            ]
+        )
+
+        goals = []
+        for model_par in model_par_samples:
+            model_par_value = tf.constant(model_par)
+            params = []
+            for controls in tf.reshape(current_params, (-1, self.control_dim)):
+                with tf.GradientTape() as t1:
+                    t1.watch(model_par_value)
+                    with tf.GradientTape() as t2:
+                        self.pmap.set_parameters_scaled(controls)
+                        t2.watch(model_par_value)
+                        self.pmap.set_parameters_scaled(
+                            [model_par_value], self.model_param_map
+                        )
+                        propagators = self.exp.compute_propagators()
+                        propagator = propagators[self.opt_gates[0]]
+                        measurement = (
+                            tf.abs(
+                                tf.linalg.adjoint(ground_state)
+                                @ propagator
+                                @ ground_state
+                            )
+                            ** 2
+                        )
+                        meas_log = tf.math.log(measurement)
+                    d_measurement = t2.gradient(meas_log, model_par_value)
+                d2_measurement = t1.gradient(d_measurement, model_par_value)
+                fisher_info -= measurement * d2_measurement
+                params.extend(
+                    [par.numpy().tolist() for par in self.pmap.get_parameters()]
+                )
+
+            goals.append(1 / fisher_info)
+
+        goal = tf.math.reduce_mean(goals)
 
         with open(self.logdir + self.logname, "a") as logfile:
             logfile.write(f"\nEvaluation {self.evaluation + 1} returned:\n")
