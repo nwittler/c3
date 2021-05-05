@@ -70,33 +70,7 @@ def create_c1_opt(optimizer_config, exp):
     options = {}
     if "options" in cfg:
         options = cfg["options"]
-    if "plot_dynamics" in cfg:
-        if cfg["plot_dynamics"] == "False":
-            plot_dynamics = False
-        elif cfg["plot_dynamics"] == "True":
-            plot_dynamics = True
-        else:
-            raise (Exception("Couldn't resolve setting of 'plot_dynamics'"))
-    else:
-        plot_dynamics = False
-    if "plot_pulses" in cfg:
-        if cfg["plot_pulses"] == "False":
-            plot_pulses = False
-        elif cfg["plot_pulses"] == "True":
-            plot_pulses = True
-        else:
-            raise (Exception("Couldn't resolve setting of 'plot_pulses'"))
-    else:
-        plot_pulses = False
-    if "store_unitaries" in cfg:
-        if cfg["store_unitaries"] == "False":
-            store_unitaries = False
-        elif cfg["store_unitaries"] == "True":
-            store_unitaries = True
-        else:
-            raise (Exception("Couldn't resolve setting of 'plot_dynamics'"))
-    else:
-        store_unitaries = False
+    store_unitaries = cfg.pop("store_unitaries", False)
     run_name = None
     if "run_name" in cfg:
         run_name = cfg["run_name"]

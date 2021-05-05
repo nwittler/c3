@@ -257,7 +257,7 @@ class ParameterMap:
         if opt_map is None:
             opt_map = self.opt_map
         values = []
-        for equiv_ids in self.opt_map:
+        for equiv_ids in opt_map:
             key = "-".join(equiv_ids[0])
             par = self.__pars[key]
             values.append(par.get_opt_value())

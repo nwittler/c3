@@ -4,6 +4,7 @@ import os
 import shutil
 import time
 
+import numpy as np
 import tensorflow as tf
 
 from c3.optimizers.optimizer import Optimizer
@@ -50,6 +51,7 @@ class ExperimentDesign(Optimizer):
         interactive=True,
         gateset_opt_map=None,
         opt_gates=None,
+        initial_point=None,
         num_control_sets=1,
     ) -> None:
         super().__init__(
@@ -59,7 +61,8 @@ class ExperimentDesign(Optimizer):
         )
         if gateset_opt_map:
             pmap.set_opt_map([[tuple(par) for par in pset] for pset in gateset_opt_map])
-
+        if initial_point:
+            self.load_best(initial_point)
         self.control_dim = len(gateset_opt_map)
         self.num_control_sets = num_control_sets
         self.options = options
@@ -106,7 +109,12 @@ class ExperimentDesign(Optimizer):
         x_init_0 = self.pmap.get_parameters_scaled()
         # We duplicate the initial control set the required number of times.
         # TODO: Provide an option for how to initialize all controls.
-        x_init = tf.stack([x_init_0] * self.num_control_sets)
+        x_init = np.stack(
+            [
+                (1 + 0.1 * rand) * x_init_0
+                for rand in np.random.randn(self.num_control_sets)
+            ]
+        )
 
         try:
             self.algorithm(
@@ -145,6 +153,7 @@ class ExperimentDesign(Optimizer):
         # TODO: Vectorize loop
         model_par = self.pmap.get_parameters_scaled(self.model_param_map)[0]
         model_par_value = tf.constant(model_par)
+        params = []
         for controls in tf.reshape(current_params, (-1, self.control_dim)):
             with tf.GradientTape() as t1:
                 t1.watch(model_par_value)
@@ -155,29 +164,28 @@ class ExperimentDesign(Optimizer):
                     self.pmap.set_parameters_scaled(
                         [model_par_value], self.model_param_map
                     )
-                    print("Calculating propagator...")
                     propagators = self.exp.compute_propagators()
                     propagator = propagators[self.opt_gates[0]]
-                    measurement = tf.abs(
-                        tf.linalg.adjoint(ground_state) @ propagator @ ground_state
+                    measurement = (
+                        tf.abs(
+                            tf.linalg.adjoint(ground_state) @ propagator @ ground_state
+                        )
+                        ** 2
                     )
-                    print(f"Measured {measurement}")
-                print("Calculating first order gradient...")
-                d_measurement = t2.gradient(measurement, model_par_value)
-            print("Calculating second order gradient...")
+                    meas_log = tf.math.log(measurement)
+                d_measurement = t2.gradient(meas_log, model_par_value)
             d2_measurement = t1.gradient(d_measurement, model_par_value)
             fisher_info -= measurement * d2_measurement
+            params.extend([par.numpy().tolist() for par in self.pmap.get_parameters()])
 
         goal = 1 / fisher_info
 
         with open(self.logdir + self.logname, "a") as logfile:
             logfile.write(f"\nEvaluation {self.evaluation + 1} returned:\n")
-            logfile.write(f"goal: Fisher: {float(goal)}\n")
+            logfile.write(f"goal: Fisher: {float(goal):1.3g}\n")
             logfile.flush()
 
-        self.optim_status["params"] = [
-            par.numpy().tolist() for par in self.pmap.get_parameters()
-        ]
+        self.optim_status["params"] = params
         self.optim_status["goal"] = float(goal)
         self.optim_status["time"] = time.asctime()
         self.evaluation += 1
