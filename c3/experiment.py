@@ -202,9 +202,12 @@ class Experiment:
 
         """
         model = self.pmap.model
-        psi_init = model.tasks["init_ground"].initialise(
-            model.drift_ham, model.lindbladian
-        )
+        if "init_ground" in model.tasks:
+            psi_init = model.tasks["init_ground"].initialise(
+                model.drift_ham, model.lindbladian
+            )
+        else:
+            psi_init = model.get_ground_state()
         self.psi_init = psi_init
         populations = []
         for sequence in sequences:
