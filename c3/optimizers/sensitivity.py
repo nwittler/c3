@@ -8,11 +8,6 @@ import numpy as np
 import tensorflow as tf
 from c3.optimizers.optimizer import Optimizer
 from c3.utils.utils import log_setup
-from c3.libraries.estimators import (
-    g_LL_prime_combined,
-    g_LL_prime,
-    neg_loglkh_multinom_norm,
-)
 
 
 class SET(Optimizer):
@@ -66,7 +61,7 @@ class SET(Optimizer):
         self.batch_sizes = batch_sizes
         self.state_labels = state_labels
         self.sweep_map = sweep_map
-        self.opt_map = [sweep_map[0]]
+        self.pmap = pmap
         self.sweep_bounds = sweep_bounds
         self.options = options
         self.inverse = False
@@ -75,32 +70,20 @@ class SET(Optimizer):
         self.__dir_path = dir_path
         self.__run_name = run_name
 
-    def log_setup(self, dir_path, run_name) -> None:
+    def log_setup(self) -> None:
         """
         Create the folders to store data.
-
-        Parameters
-        ----------
-        dir_path : str
-            Filepath
-        run_name : str
-            User specified name for the run
-
         """
         dir_path = os.path.abspath(self.__dir_path)
         run_name = self.__run_name
         if run_name is None:
-            run_name = "-".join(
-                [
-                    "sensitivity",
-                    self.algorithm.__name__,
-                    self.sampling.__name__,
-                    self.fom.__name__,
-                ]
-            )
+            run_name = "_".join(["Sensitivity", self.algorithm.__name__])
         self.logdir = log_setup(dir_path, run_name)
         self.logname = "sensitivity.log"
-        shutil.copy2(self.__real_model_folder, self.logdir)
+        if isinstance(self.exp.created_by, str):
+            shutil.copy2(self.exp.created_by, self.logdir)
+        if isinstance(self.created_by, str):
+            shutil.copy2(self.created_by, self.logdir)
 
     def read_data(self, datafiles):
         # TODO move common methods of sensitivity and c3 to super class
@@ -112,7 +95,6 @@ class SET(Optimizer):
         datafiles : list of str
             List of paths for files that contain learning data.
         """
-        self.__real_model_folder = os.path.dirname(datafiles.values()[0])
         for target, datafile in datafiles.items():
             with open(datafile, "rb+") as file:
                 self.learn_data[target] = pickle.load(file)
@@ -144,21 +126,18 @@ class SET(Optimizer):
         Run the sensitivity analysis.
 
         """
-        self.nice_print = self.exp.print_parameters
 
         print("Initial parameters:")
-        print(self.exp.print_parameters())
+        print(self.exp.pmap.print_parameters())
         for ii in range(len(self.sweep_map)):
             self.dfname = "data.dat"
             self.opt_map = [self.sweep_map[ii]]
             self.options["bounds"] = [self.sweep_bounds[ii]]
             print(f"C3:STATUS:Sweeping {self.opt_map}: {self.sweep_bounds[ii]}")
-            self.log_setup(self.dir_path, "_".join(self.opt_map[0]))
+            self.log_setup()
             self.start_log()
             print(f"C3:STATUS:Saving as: {os.path.abspath(self.logdir + self.logname)}")
-            x_init = self.exp.get_parameters(self.opt_map, scaled=False)
-            self.init_gateset_params = self.exp.gateset.get_parameters()
-            self.init_gateset_opt_map = self.exp.gateset.list_parameters()
+            x_init = self.exp.pmap.get_parameters()
             try:
                 self.algorithm(
                     x_init,
@@ -169,15 +148,7 @@ class SET(Optimizer):
                 )
             except KeyboardInterrupt:
                 pass
-            self.exp.set_parameters(x_init, self.opt_map, scaled=False)
-
-        # #=== Get the resulting data ======================================
-
-        # Xs=np.array(list(learner.data.keys()))
-        # Ys=np.array(list(learner.data.values()))
-        # Ks=np.argsort(Xs)
-        # Xs=Xs[Ks]
-        # Ys=Ys[Ks]
+            self.exp.pmap.set_parameters(x_init)
 
     def goal_run(self, current_params):
         """
@@ -218,14 +189,14 @@ class SET(Optimizer):
                 gateset_params = m["params"]
                 gateset_opt_map = self.gateset_opt_map
                 m_vals = m["results"]
-                m_stds = np.array(m["results_std"])
+                m_stds = m["results_std"]
                 m_shots = m["shots"]
                 sequences = m["seqs"]
                 num_seqs = len(sequences)
                 if target == "all":
                     num_seqs = len(sequences) * 3
 
-                self.pmap.set_parameters_scaled(current_params)
+                self.pmap.set_parameters(current_params, [self.sweep_map])
                 self.pmap.model.update_model()
 
                 self.pmap.set_parameters(gateset_params, gateset_opt_map)
@@ -234,27 +205,19 @@ class SET(Optimizer):
                 self.exp.opt_gates = list(set(itertools.chain.from_iterable(sequences)))
                 self.exp.compute_propagators()
                 pops = self.exp.evaluate(sequences)
-                sim_vals = self.exp.process(
+                sim_vals, _ = self.exp.process(
                     labels=self.state_labels[target], populations=pops
                 )
 
                 exp_stds.extend(m_stds)
                 exp_shots.extend(m_shots)
 
-                if target == "all":
-                    goal = neg_loglkh_multinom_norm(
-                        m_vals,
-                        tf.stack(sim_vals),
-                        tf.constant(m_stds, dtype=tf.float64),
-                        tf.constant(m_shots, dtype=tf.float64),
-                    )
-                else:
-                    goal = g_LL_prime(
-                        m_vals,
-                        tf.stack(sim_vals),
-                        tf.constant(m_stds, dtype=tf.float64),
-                        tf.constant(m_shots, dtype=tf.float64),
-                    )
+                goal = self.fom(
+                    m_vals,
+                    tf.stack(sim_vals),
+                    tf.constant(m_stds, dtype=tf.float64),
+                    tf.constant(m_shots, dtype=tf.float64),
+                )
                 goals.append(goal.numpy())
                 seq_weigths.append(num_seqs)
                 sim_values.extend(sim_vals)
@@ -263,7 +226,7 @@ class SET(Optimizer):
                 with open(self.logdir + self.logname, "a") as logfile:
                     logfile.write(
                         f"\n  Parameterset {ipar + 1}, #{count} of {len(indeces)}:\n"
-                        f"{str(self.exp.pmap)}\n"
+                        f"{self.pmap.str_parameters(gateset_opt_map)}\n"
                     )
                     logfile.write(
                         "Sequence    Simulation  Experiment  Std           Shots"
@@ -271,9 +234,9 @@ class SET(Optimizer):
                     )
 
                 for iseq in range(len(sequences)):
-                    m_val = np.array(m_vals[iseq])
-                    m_std = np.array(m_stds[iseq])
-                    shots = np.array(m_shots[iseq])
+                    m_val = np.reshape(m_vals[iseq], (-1,))
+                    m_std = np.reshape(m_stds[iseq], (-1,))
+                    shots = np.reshape(m_shots[iseq], (-1,))
                     sim_val = sim_vals[iseq].numpy()
                     with open(self.logdir + self.logname, "a") as logfile:
                         for ii in range(len(sim_val)):
@@ -287,7 +250,7 @@ class SET(Optimizer):
                             )
                         logfile.flush()
 
-        goal = g_LL_prime_combined(goals, seq_weigths)
+        goal = tf.reduce_mean(goals).numpy()
 
         with open(self.logdir + self.logname, "a") as logfile:
             logfile.write("\nFinished batch with ")
@@ -301,7 +264,7 @@ class SET(Optimizer):
             logfile.flush()
 
         self.optim_status["params"] = [
-            par.numpy().tolist() for par in self.exp.get_parameters(self.opt_map)
+            par.numpy().tolist() for par in self.exp.pmap.get_parameters()
         ]
         self.optim_status["goal"] = goal
         self.evaluation += 1

@@ -247,7 +247,7 @@ def create_c3_opt(optimizer_config):
     return opt
 
 
-def create_sensitivity(task_config):
+def create_sensitivity(task_config, exp):
     """
     Create the object to perform a sensitivity analysis.
 
@@ -261,10 +261,15 @@ def create_sensitivity(task_config):
         Sensitivity object.
 
     """
+
+    parameter_map = exp.pmap
+
     with open(task_config, "r") as cfg_file:
         cfg = hjson.loads(cfg_file.read())
 
     sweep_map = [tuple(a) for a in cfg["sweep_map"]]
+
+    parameter_map.set_opt_map([sweep_map])
 
     state_labels = {"all": None}
     if "state_labels" in cfg:
@@ -319,9 +324,7 @@ def create_sensitivity(task_config):
     if "options" in cfg:
         options = cfg["options"]
 
-    sweep_bounds = []
-    for a in cfg["sweep_bounds"]:
-        sweep_bounds.append([eval(a[0]), eval(a[1])])
+    sweep_bounds = cfg["sweep_bounds"]
 
     if "same_dyn" in cfg:
         same_dyn = bool(cfg["same_dyn"])
@@ -334,6 +337,7 @@ def create_sensitivity(task_config):
         estimator_list=estimator_list,
         sampling=sampling_func,
         batch_sizes=batch_sizes,
+        pmap=parameter_map,
         state_labels=state_labels,
         sweep_map=sweep_map,
         sweep_bounds=sweep_bounds,
