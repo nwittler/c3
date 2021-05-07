@@ -109,12 +109,7 @@ class ExperimentDesign(Optimizer):
         x_init_0 = self.pmap.get_parameters_scaled()
         # We duplicate the initial control set the required number of times.
         # TODO: Provide an option for how to initialize all controls.
-        x_init = np.stack(
-            [
-                (1 + 0.1 * rand) * x_init_0
-                for rand in np.random.randn(self.num_control_sets)
-            ]
-        )
+        x_init = np.stack([x_init_0] * self.num_control_sets)
 
         try:
             self.algorithm(
@@ -160,36 +155,34 @@ class ExperimentDesign(Optimizer):
             ]
         )
 
+        control_sets = tf.reshape(current_params, (-1, self.control_dim))
+
         goals = []
-        for model_par in model_par_samples:
+        params = []
+        for ii, model_par in enumerate(model_par_samples):
+            controls = control_sets[ii]
             model_par_value = tf.constant(model_par)
-            params = []
-            for controls in tf.reshape(current_params, (-1, self.control_dim)):
-                with tf.GradientTape() as t1:
-                    t1.watch(model_par_value)
-                    with tf.GradientTape() as t2:
-                        self.pmap.set_parameters_scaled(controls)
-                        t2.watch(model_par_value)
-                        self.pmap.set_parameters_scaled(
-                            [model_par_value], self.model_param_map
+            with tf.GradientTape() as t1:
+                t1.watch(model_par_value)
+                with tf.GradientTape() as t2:
+                    self.pmap.set_parameters_scaled(controls)
+                    t2.watch(model_par_value)
+                    self.pmap.set_parameters_scaled(
+                        [model_par_value], self.model_param_map
+                    )
+                    propagators = self.exp.compute_propagators()
+                    propagator = propagators[self.opt_gates[0]]
+                    measurement = (
+                        tf.abs(
+                            tf.linalg.adjoint(ground_state) @ propagator @ ground_state
                         )
-                        propagators = self.exp.compute_propagators()
-                        propagator = propagators[self.opt_gates[0]]
-                        measurement = (
-                            tf.abs(
-                                tf.linalg.adjoint(ground_state)
-                                @ propagator
-                                @ ground_state
-                            )
-                            ** 2
-                        )
-                        meas_log = tf.math.log(measurement)
-                    d_measurement = t2.gradient(meas_log, model_par_value)
-                d2_measurement = t1.gradient(d_measurement, model_par_value)
-                fisher_info -= measurement * d2_measurement
-                params.extend(
-                    [par.numpy().tolist() for par in self.pmap.get_parameters()]
-                )
+                        ** 2
+                    )
+                    meas_log = tf.math.log(measurement)
+                d_measurement = t2.gradient(meas_log, model_par_value)
+            d2_measurement = t1.gradient(d_measurement, model_par_value)
+            fisher_info -= measurement * d2_measurement
+            params.extend([par.numpy().tolist() for par in self.pmap.get_parameters()])
 
             goals.append(1 / fisher_info)
 
