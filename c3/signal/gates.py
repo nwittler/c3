@@ -327,7 +327,10 @@ class Instruction:
                 else:
                     phase = -xy_angle - freq_offset * comp_ts
                 denv = None
-                if comp.drag or opts.pop("drag", False) or opts.pop("drag_2", False):
+
+                drag = opts.pop("drag", False)
+                drag_2 = opts.pop("drag_2", False)
+                if comp.drag or drag or drag_2:
                     dt = ts[1] - ts[0]
                     delta = comp.params["delta"].get_value()
                     with tf.GradientTape() as t:
@@ -336,7 +339,7 @@ class Instruction:
                     denv = t.gradient(
                         env, comp_ts, unconnected_gradients=tf.UnconnectedGradients.ZERO
                     )  # Derivative W.R.T. to bins
-                    if not opts.pop("drag", False):
+                    if drag_2:
                         # Use drag_2 definition here
                         denv = denv * dt  # derivative W.R.T. to time
 
