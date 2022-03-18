@@ -50,8 +50,8 @@ class Instruction:
         params: dict = None,
         ideal: np.array = None,
         channels: List[str] = [],
-        t_start: float = None,
-        t_end: float = None,
+        t_start: float = 0,
+        t_end: float = 0,
         # fixed_t_end: bool = True,
     ):
         self.name = name
