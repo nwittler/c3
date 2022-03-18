@@ -12,6 +12,8 @@ from c3.utils.utils import log_setup
 from c3.libraries.algorithms import algorithms
 from c3.libraries.fidelities import fidelities
 
+from c3.measurement import UnitaryInfid
+
 
 class OptimalControl(Optimizer):
     """
@@ -79,6 +81,7 @@ class OptimalControl(Optimizer):
         self.interactive = interactive
         self.update_model = include_model
         self.fid_func_kwargs = fid_func_kwargs
+        self.meas = UnitaryInfid(pmap=pmap, subspace=fid_subspace)
         self.run = (
             self.optimize_controls
         )  # Alias the legacy name for the method running the
@@ -171,35 +174,24 @@ class OptimalControl(Optimizer):
         tf.float64
             Value of the goal function
         """
-        self.pmap.set_parameters_scaled(current_params)
-        dims = self.pmap.model.dims
-        propagators = self.exp.compute_propagators()
+        goal = self.meas.measure(current_params, [self.pmap.instructions["rx90p[0]"]])
 
-        goal = self.fid_func(
-            propagators=propagators,
-            instructions=self.pmap.instructions,
-            index=self.index,
-            dims=dims,
-            n_eval=self.evaluation + 1,
-            **self.fid_func_kwargs,
-        )
-
-        with open(self.logdir + self.logname, "a") as logfile:
-            logfile.write(f"\nEvaluation {self.evaluation + 1} returned:\n")
-            logfile.write("goal: {}: {}\n".format(self.fid_func.__name__, float(goal)))
-            for cal in self.callback_fids:
-                val = cal(
-                    propagators=propagators,
-                    instructions=self.pmap.instructions,
-                    index=self.index,
-                    dims=dims,
-                    n_eval=self.evaluation + 1,
-                )
-                if isinstance(val, tf.Tensor):
-                    val = float(val.numpy())
-                logfile.write("{}: {}\n".format(cal.__name__, val))
-                self.optim_status[cal.__name__] = val
-            logfile.flush()
+        # with open(self.logdir + self.logname, "a") as logfile:
+        #     logfile.write(f"\nEvaluation {self.evaluation + 1} returned:\n")
+        #     logfile.write("goal: {}: {}\n".format(self.fid_func.__name__, float(goal)))
+        #     for cal in self.callback_fids:
+        #         val = cal(
+        #             propagators=propagators,
+        #             instructions=self.pmap.instructions,
+        #             index=self.index,
+        #             dims=dims,
+        #             n_eval=self.evaluation + 1,
+        #         )
+        #         if isinstance(val, tf.Tensor):
+        #             val = float(val.numpy())
+        #         logfile.write("{}: {}\n".format(cal.__name__, val))
+        #         self.optim_status[cal.__name__] = val
+        #     logfile.flush()
 
         self.optim_status["params"] = [
             par.numpy().tolist() for par in self.pmap.get_parameters()
