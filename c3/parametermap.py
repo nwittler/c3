@@ -5,8 +5,12 @@ import hjson
 import copy
 import numpy as np
 import tensorflow as tf
+
 from c3.c3objs import Quantity, hjson_decode, hjson_encode
 from c3.signal.gates import Instruction
+from c3.model import Model
+from c3.generator.generator import Generator
+
 from typing import Union
 from tensorflow.errors import InvalidArgumentError
 
@@ -18,7 +22,10 @@ class ParameterMap:
     """
 
     def __init__(
-        self, instructions: List[Instruction] = [], generator=None, model=None
+        self,
+        instructions: List[Instruction] = [],
+        generator: Generator = None,
+        model: Model = None,
     ):
         self.instructions: Dict[str, Instruction] = dict()
         self.opt_map: List[List[Tuple[str]]] = list()
