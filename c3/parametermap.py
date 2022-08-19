@@ -27,6 +27,11 @@ class ParameterMap:
         for instr in instructions:
             self.instructions[instr.get_key()] = instr
 
+        self.update_model = False
+        self.set_parameters_scaled = self._set_parameters_scaled_ctrls
+        self.__initialize_parameters(generator, model)
+
+    def __initialize_parameters(self, generator, model) -> None:
         # Collecting model components
         components = {}
         if model:
@@ -36,11 +41,6 @@ class ParameterMap:
         if generator:
             components.update(generator.devices)
         self.__components = components
-        self.update_model = False
-        self.set_parameters_scaled = self._set_parameters_scaled_ctrls
-        self.__initialize_parameters()
-
-    def __initialize_parameters(self) -> None:
         par_lens = {}
         pars = {}
         par_ids_model = []
@@ -64,7 +64,7 @@ class ParameterMap:
         self._par_ids_model = par_ids_model
 
     def update_parameters(self):
-        self.__initialize_parameters()
+        self.__initialize_parameters(self.generator, self.model)
 
     def load_values(self, init_point):
         """
@@ -137,7 +137,7 @@ class ParameterMap:
                 instr = Instruction()
                 instr.from_dict(gate, name=key)
             self.instructions[key] = instr
-            self.__initialize_parameters()
+            self.__initialize_parameters(self.generator, self.model)
 
     def write_config(self, filepath: str) -> None:
         """
