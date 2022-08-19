@@ -84,9 +84,9 @@
               }
               freq_offset:
               {
-                value: -53000000.0
-                min_val: -56000000.0
-                max_val: -52000000.0
+                value: -53e6
+                min_val: -86e6
+                max_val: -22e6
                 unit: Hz 2pi
                 symbol: \alpha
               }
@@ -124,8 +124,8 @@
               freq:
               {
                 value: 5649999999.999999
-                min_val: 5085000000.0
-                max_val: 6215000000.000001
+                min_val: 5.085e9
+                max_val: 6.215e9
                 unit: Hz 2pi
                 symbol: \alpha
               }
@@ -168,9 +168,9 @@
               }
               freq_offset:
               {
-                value: -53000000.0
-                min_val: -56000000.0
-                max_val: -52000000.0
+                value: -53e6
+                min_val: -86e6
+                max_val: -22e6
                 unit: Hz 2pi
                 symbol: \alpha
               }
@@ -208,8 +208,8 @@
               freq:
               {
                 value: 5649999999.999999
-                min_val: 5085000000.0
-                max_val: 6215000000.000001
+                min_val: 5.085e9
+                max_val: 6.215e9
                 unit: Hz 2pi
                 symbol: \alpha
               }
@@ -301,9 +301,9 @@
               }
               freq_offset:
               {
-                value: -53000000.0
-                min_val: -56000000.0
-                max_val: -52000000.0
+                value: -53e6
+                min_val: -86e6
+                max_val: -32e6
                 unit: Hz 2pi
                 symbol: \alpha
               }
@@ -340,9 +340,9 @@
             {
               freq:
               {
-                value: 5050000000.0
-                min_val: 4545000000.0
-                max_val: 5555000000.0
+                value: 5.050e9
+                min_val: 4.545e9
+                max_val: 5.555e9
                 unit: Hz 2pi
                 symbol: \alpha
               }
@@ -425,8 +425,8 @@
               freq:
               {
                 value: 5649999999.999999
-                min_val: 5085000000.0
-                max_val: 6215000000.000001
+                min_val: 5.085e9
+                max_val: 6.215e9
                 unit: Hz 2pi
                 symbol: \alpha
               }
@@ -557,9 +557,9 @@
             {
               freq:
               {
-                value: 5050000000.0
-                min_val: 4545000000.0
-                max_val: 5555000000.0
+                value: 5.050e9
+                min_val: 4.545e9
+                max_val: 5.555e9
                 unit: Hz 2pi
                 symbol: \alpha
               }
@@ -602,9 +602,9 @@
               }
               freq_offset:
               {
-                value: -53000000.0
-                min_val: -56000000.0
-                max_val: -52000000.0
+                value: -53e6
+                min_val: -86e6
+                max_val: -22e6
                 unit: Hz 2pi
                 symbol: \alpha
               }
@@ -642,8 +642,8 @@
               freq:
               {
                 value: 5649999999.999999
-                min_val: 5085000000.0
-                max_val: 6215000000.000001
+                min_val: 5.085e9
+                max_val: 6.215e9
                 unit: Hz 2pi
                 symbol: \alpha
               }
@@ -673,17 +673,17 @@
         {
           freq:
           {
-            value: 5000000000.0
-            min_val: 4995000000.0
-            max_val: 5005000000.0
+            value: 5.000e9
+            min_val: 4.995e9
+            max_val: 5.005e9
             unit: Hz 2pi
             symbol: \alpha
           }
           anhar:
           {
-            value: -210000000.0
-            min_val: -380000000.0
-            max_val: -120000000.00000003
+            value: -210e6
+            min_val: -380e6
+            max_val: -120e6
             unit: Hz 2pi
             symbol: \alpha
           }
@@ -721,17 +721,17 @@
         {
           freq:
           {
-            value: 5600000000.0
-            min_val: 5595000000.0
-            max_val: 5605000000.0
+            value: 5.600e9
+            min_val: 5.595e9
+            max_val: 5.605e9
             unit: Hz 2pi
             symbol: \alpha
           }
           anhar:
           {
-            value: -240000000.0
-            min_val: -380000000.0
-            max_val: -120000000.00000003
+            value: -240e6
+            min_val: -380e6
+            max_val: -120e6
             unit: Hz 2pi
             symbol: \alpha
           }
@@ -777,9 +777,9 @@
           }
           anhar:
           {
-            value: -240000000.0
-            min_val: -380000000.0
-            max_val: -120000000.00000003
+            value: -240e6
+            min_val: -380e6
+            max_val: -120e6
             unit: Hz 2pi
             symbol: \alpha
           }
@@ -842,7 +842,7 @@
           {
             value: 49999999.99999999
             min_val: -999.9999999999999
-            max_val: 200000000.0
+            max_val: 200e6
             unit: Hz 2pi
             symbol: \alpha
           }
@@ -890,7 +890,7 @@
         inputs: 0
         outputs: 1
         params: {}
-        resolution: 100000000000.0
+        resolution: 100.000e9
       }
       AWG:
       {
@@ -899,7 +899,7 @@
         inputs: 0
         outputs: 1
         params: {}
-        resolution: 2000000000.0
+        resolution: 2.000e9
       }
       DigitalToAnalog:
       {
@@ -908,7 +908,7 @@
         inputs: 1
         outputs: 1
         params: {}
-        resolution: 100000000000.0
+        resolution: 100.000e9
       }
       Mixer:
       {
@@ -929,9 +929,9 @@
         {
           V_to_Hz:
           {
-            value: 1000000000.0
-            min_val: 900000000.0
-            max_val: 1100000000.0
+            value: 1.000e9
+            min_val: 900e6
+            max_val: 1.100e9
             unit: Hz/V
             symbol: \alpha
           }
@@ -986,5 +986,5 @@
     overwrite_propagators: true
     stop_partial_propagator_gradient: true
   }
-  sim_res: 100000000000.0
+  sim_res: 100.000e9
 }
