@@ -89,13 +89,14 @@ class Quantity:
 
         self.pref = np.array(pref)
         if min_val is None and max_val is None:
+            ones = np.ones_like(value)  # make sure limits have the right shape
             if value.any():
                 minmax = [0.9 * value, 1.1 * value]
-                min_val = np.min(minmax)
-                max_val = np.max(minmax)
+                min_val = np.min(minmax) * ones
+                max_val = np.max(minmax) * ones
             else:
-                min_val = np.array(-1)
-                max_val = np.array(1)
+                min_val = np.array(-1) * ones
+                max_val = np.array(1) * ones
         self._set_limits(min_val, max_val)
         self.unit = unit
         self.symbol = symbol
@@ -295,16 +296,16 @@ class Quantity:
         min_val, max_val = self.get_limits()
         # Extra bounds included to not be directly at border due to differentiability
         # val can be matrix valued
-        minmax = [
-            tf.math.reduce_min(val * 0.9),
-            tf.math.reduce_max(val * 0.9),
-            tf.math.reduce_min(val * 1.1),
-            tf.math.reduce_max(val * 1.1),
-            min_val,
-            max_val,
-        ]
-        min_val = tf.math.reduce_min(minmax)
-        max_val = tf.math.reduce_max(minmax)
+        minmax = tf.stack(
+            [
+                tf.math.reduce_min([val * 0.9, val * 1.1], axis=0),
+                tf.math.reduce_max([val * 0.9, val * 1.1], axis=0),
+                min_val,
+                max_val,
+            ]
+        )
+        min_val = (tf.math.reduce_min(minmax, axis=0),)
+        max_val = (tf.math.reduce_max(minmax, axis=0),)
         self._set_limits(min_val, max_val)
         self._set_value(val)
 

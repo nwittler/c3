@@ -63,6 +63,10 @@ class ParameterMap:
         self._pars: Dict[str, Quantity] = pars
         self._par_ids_model = par_ids_model
 
+    def add_parameter(self, name, param: Quantity) -> None:
+        self._par_lens[name] = param.length
+        self._pars[name] = param
+
     def update_parameters(self):
         self.__initialize_parameters()
 
@@ -81,7 +85,7 @@ class ParameterMap:
 
         best_opt_map = best["opt_map"]
         init_p = best["optim_status"]["params"]
-        self.set_parameters(init_p, best_opt_map, extend_bounds=True)
+        self.set_parameters(init_p, best_opt_map, extend_bounds=False)
 
     def store_values(self, path: str, optim_status=None) -> None:
         """

@@ -196,7 +196,7 @@ class Model:
                     ) from ve
                 opers_list.append(self.ann_opers[indx])
             drive.init_Hs(opers_list)
-        self.update_model()
+        self.update_model(ordered=True)
 
     def set_max_excitations(self, max_excitations) -> None:
         """
@@ -414,7 +414,7 @@ class Model:
     def get_Lindbladians(self):
         return self.col_ops
 
-    def update_model(self, ordered=True):
+    def update_model(self, ordered=False):
         self.update_Hamiltonians()
         if "lindbladian" in self.frame:
             self.update_Lindbladians()

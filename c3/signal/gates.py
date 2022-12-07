@@ -220,7 +220,9 @@ class Instruction:
         self._options[chan][name] = options
 
     def get_optimizable_parameters(self):
-        parameter_list = list()
+        parameter_list = []
+        for name, param in self.params.items():
+            parameter_list.append(([name], param))
         for chan in self.comps.keys():
             for comp in self.comps[chan]:
                 for par_name, par_value in self.comps[chan][comp].params.items():
