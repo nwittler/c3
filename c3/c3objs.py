@@ -274,7 +274,7 @@ class Quantity:
         within specified min and max."""
         # setting can be numpyish
         if isinstance(val, ops.EagerTensor) or isinstance(val, ops.Tensor):
-            val = tf.cast(val, tf.float64)
+            val = tf.math.real(val)
         else:
             val = tf.constant(val, tf.float64)
 
@@ -289,7 +289,7 @@ class Quantity:
                 f"max_val: {num3str(self.get_limits()[1])}{self.unit}",
             )
 
-        self.value = tf.cast(tmp, tf.float64)
+        self.value = tf.math.real(tmp)
 
     def _set_value_extend(self, val) -> None:
         """Set the value of this quantity as tensorflow. If needed, limits will be extended."""

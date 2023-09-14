@@ -336,7 +336,7 @@ class DigitalToAnalog(Device):
             ),
             shape=[new_dim],
         )
-        inphase = tf.cast(inphase, tf.float64)
+        inphase = tf.math.real(inphase)
         quadrature = tf.reshape(
             tf.image.resize(
                 tf.reshape(awg_signal[0]["quadrature"], shape=[1, old_dim, 1]),
@@ -345,7 +345,7 @@ class DigitalToAnalog(Device):
             ),
             shape=[new_dim],
         )
-        quadrature = tf.cast(quadrature, tf.float64)
+        quadrature = tf.math.real(quadrature)
         self.signal["ts"] = ts
         self.signal["inphase"] = inphase
         self.signal["quadrature"] = quadrature
@@ -399,7 +399,7 @@ class FluxTuning(Device):
 
     def get_factor(self, phi):
         pi = tf.constant(np.pi, dtype=tf.float64)
-        phi_0 = tf.cast(self.params["phi_0"].get_value(), tf.float64)
+        phi_0 = tf.math.real(self.params["phi_0"].get_value())
 
         if "d" in self.params:
             d = self.params["d"].get_value()
@@ -687,7 +687,7 @@ class StepFuncFilter(Device):
         for key, signal in signal_in[0].items():
             if key == "ts":
                 continue
-            signal_out[key] = tf.cast(tf_convolve(signal, impulse_response), tf.float64)
+            signal_out[key] = tf.math.real(tf_convolve(signal, impulse_response))
         signal_out["ts"] = signal_in[0]["ts"]
 
         return signal_out

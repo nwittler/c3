@@ -229,7 +229,7 @@ class Qubit(PhysicalComponent):
                 else:
                     freq_diff = np.array([self.params["freq"].get_value(), 0])
                 beta = 1 / (self.params["temp"].get_value() * kb)
-                det_bal = tf.exp(-hbar * tf.cast(freq_diff, tf.float64) * beta)
+                det_bal = tf.exp(-hbar * tf.math.real(freq_diff) * beta)
                 det_bal_mat = hskron(tf.linalg.tensor_diag(det_bal), self.index, dims)
                 L = gamma * tf.matmul(self.collapse_ops["temp"], det_bal_mat)
                 Ls.append(L)
@@ -453,7 +453,7 @@ class Transmon(PhysicalComponent):
                     else:
                         freq_diff = np.array([self.params["freq"].get_value(), 0])
                     beta = 1 / (self.params["temp"].get_value() * kb)
-                    det_bal = tf.exp(-hbar * tf.cast(freq_diff, tf.float64) * beta)
+                    det_bal = tf.exp(-hbar * tf.math.real(freq_diff) * beta)
                     det_bal_mat = hskron(
                         tf.linalg.tensor_diag(det_bal), self.index, dims
                     )
@@ -738,7 +738,7 @@ class CShuntFluxQubit(Qubit):
         )
         gamma = self.params["gamma"].get_value()
         EJ = self.params["EJ"].get_value()
-        phi_variable = tf.cast(phi_variable, tf.float64)
+        phi_variable = tf.math.real(phi_variable)
         if deriv_order == 0:  # Has to be defined
             return EJ * (
                 -1 * tf.cos(phi_variable + phi) - 2 * gamma * tf.cos(phi_variable / 2)
@@ -830,7 +830,7 @@ class CShuntFluxQubit(Qubit):
         return phi_var_min
 
         # gamma = self.params["gamma"].get_value()
-        # return tf.cast(0.5, tf.float64)
+        # return tf.math.real(0.5)
 
     def get_frequency(self, phi_sig=0):
         EC = self.params["EC"].get_value()

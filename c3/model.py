@@ -414,7 +414,7 @@ class Model:
     def get_Lindbladians(self):
         return self.col_ops
 
-    def update_model(self, ordered=False):
+    def update_model(self, ordered=True):
         self.update_Hamiltonians()
         if "lindbladian" in self.frame:
             self.update_Lindbladians()
