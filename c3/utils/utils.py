@@ -3,12 +3,12 @@ import time
 import os
 import tempfile
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import warnings
 
 
 # SYSTEM AND SETUP
-def log_setup(data_path: str = None, run_name: str = "run") -> str:
+def log_setup(data_path: str = "", run_name: str = "run") -> str:
     """
     Make sure the file path to save data exists. Create an appropriately named
     folder with date and time. Also creates a symlink "recent" to the folder.
@@ -65,7 +65,7 @@ def replace_symlink(path: str, alias: str) -> None:
 
 
 # NICE PRINTING FUNCTIONS
-def eng_num(val: float) -> Tuple[float, str]:
+def eng_num(val: Union[float, np.ndarray]) -> Tuple[float, str]:
     """Convert a number to engineering notation by returning number and prefix."""
     if np.array(val).size > 1:
         return np.array(val), ""
@@ -95,13 +95,14 @@ def eng_num(val: float) -> Tuple[float, str]:
 
 def num3str(val: float, use_prefix: bool = True) -> str:
     """Convert a number to a human readable string in engineering notation."""
-    if np.array(val).size > 1:
-        return np.array2string(val, precision=3)
+    val_np = np.array(val)
+    if val_np.size > 1:
+        return np.array2string(val_np, precision=3)
     if use_prefix:
-        num, prefix = eng_num(val)
+        num, prefix = eng_num(val_np)
         formatted_string = f"{num:.3f} " + prefix
     else:
-        formatted_string = f"{val:.3} "
+        formatted_string = f"{val_np:.3} "
     return formatted_string
 
 

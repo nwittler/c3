@@ -202,7 +202,7 @@ def tf_log10(x):
 
 def tf_abs_squared(x):
     """Rewritten so that is has a gradient."""
-    return tf.reshape(tf.cast(tf.math.conj(x) * x, dtype=tf.float64), shape=[1])
+    return tf.reshape(tf.math.real(tf.math.conj(x) * x), shape=[1])
 
 
 def tf_complexify(x):

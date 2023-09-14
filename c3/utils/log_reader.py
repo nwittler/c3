@@ -5,6 +5,7 @@ import argparse
 import hjson
 from typing import Any, Dict
 
+import numpy as np
 from c3.utils.utils import num3str
 from rich.console import Console
 from rich.table import Table
@@ -33,8 +34,11 @@ def show_table(log: Dict[str, Any], console: Console) -> None:
     table.add_column("Value", justify="right")
     table.add_column("Gradient", justify="right")
     for ii, equiv_ids in enumerate(opt_map):
-        par = params[ii]
-        par = num3str(par)
+        par = np.array(params[ii])
+        if par.size > 8:
+            par = f"<{par.size}> values "
+        else:
+            par = num3str(par)
         par_id = equiv_ids[0]
         table.add_row(par_id, par + units[ii], num3str(grads[ii]) + units[ii])
         for par_id in equiv_ids[1:]:
