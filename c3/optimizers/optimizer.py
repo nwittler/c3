@@ -226,8 +226,7 @@ class Optimizer:
         np.array
             Value of the gradient.
         """
-        key = str(x)
-        gradient = self.gradients.pop(key)
+        gradient = self.gradients.pop("auto")
         if np.any(np.isnan(gradient)) or np.any(np.isinf(gradient)):
             # TODO: is simply a warning sufficient?
             gradient[
@@ -295,7 +294,7 @@ class Optimizer:
                 f"{self.pmap.get_key_from_scaled_index(i[0])} has no gradient. This might indicate no usage for current experiment.",
                 Warning,
             )
-        self.gradients[str(current_params.numpy())] = gradients
+        self.gradients["auto"] = gradients
         # We use zip to create pairs of Quantity objects and their new bare numeric parameter values.
         # Then we compute the new physical value and store it in the status.
         self.pmap.set_parameters_scaled(x)
