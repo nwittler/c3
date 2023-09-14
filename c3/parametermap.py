@@ -80,12 +80,17 @@ class ParameterMap:
             File location of the initial point
 
         """
-        with open(init_point) as init_file:
-            best = hjson.load(init_file, object_pairs_hook=hjson_decode)
+        try:
+            with open(init_point) as init_file:
+                best = hjson.load(init_file, object_pairs_hook=hjson_decode)
 
-        best_opt_map = best["opt_map"]
-        init_p = best["optim_status"]["params"]
-        self.set_parameters(init_p, best_opt_map, extend_bounds=False)
+            best_opt_map = best["opt_map"]
+            init_p = best["optim_status"]["params"]
+            self.set_parameters(init_p, best_opt_map, extend_bounds=False)
+            print(f"Loading parameters from {init_point}")
+
+        except FileNotFoundError:
+            print(f"Could not load from {init_point}")
 
     def store_values(self, path: str, optim_status=None) -> None:
         """
@@ -389,7 +394,7 @@ class ParameterMap:
             List of parameter values. Matrix valued parameters need to be flattened.
 
         """
-        self._set_parameters_scaled_ctrls(values)
+        self._set_parameters_scaled_ctrls(values, opt_map)
         self.model.update_model()
 
     def get_key_from_scaled_index(self, idx, opt_map=None) -> str:
